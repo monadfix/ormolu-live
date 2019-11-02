@@ -22,9 +22,32 @@ let
     };
   };
 
+  ormolu-live = haskellPackages.ormolu-live;
+
 in
   {
-    ormolu-live = haskellPackages.ormolu-live;
+    ormolu-live-release = pkgs.stdenv.mkDerivation rec {
+      inherit (ormolu-live) name version;
+      index-html = builtins.toFile "index.html" ''
+        <html>
+          <head>
+            <script language="javascript" src="all.min.js" async></script>
+          </head>
+          <body></body>
+        </html>
+      '';
+      buildCommand = ''
+        mkdir -p $out
+        cp ${index-html} $out/index.html
+        ${pkgs.closurecompiler}/bin/closure-compiler \
+          ${ormolu-live}/bin/ormolu-live.jsexe/all.js \
+          --compilation_level=ADVANCED_OPTIMIZATIONS \
+          --jscomp_off=checkVars \
+          --externs=${ormolu-live}/bin/ormolu-live.jsexe/all.js.externs \
+          > $out/all.min.js
+      '';
+    };
+
     shell = haskellPackages.shellFor {
       packages = ps: [
         ps.ormolu-live
@@ -41,17 +64,3 @@ in
   #             ["--ghcjs-option=-O2 " "--ghcjs-option=-dedupe"];
   #         }
   #   );
-
-  # pkgs.stdenv.mkDerivation {
-  #   inherit (ormolu) name version;
-  #   buildCommand = ''
-  #     mkdir -p $out
-  #     cp ${ormolu}/bin/ormolu.jsexe/{rts,lib,out,runmain}.js $out
-  #     ${pkgs.closurecompiler}/bin/closure-compiler \
-  #       ${ormolu}/bin/ormolu.jsexe/all.js \
-  #       --compilation_level=ADVANCED_OPTIMIZATIONS \
-  #       --jscomp_off=checkVars \
-  #       --externs=${ormolu}/bin/ormolu.jsexe/all.js.externs \
-  #       > $out/all.min.js
-  #   '';
-  # }
