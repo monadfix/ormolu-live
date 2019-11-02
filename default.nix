@@ -22,41 +22,8 @@ let
     };
   };
 
-  ormolu-live = haskellPackages.ormolu-live;
-
 in
-  {
-    ormolu-live-release = pkgs.stdenv.mkDerivation rec {
-      inherit (ormolu-live) name version;
-      index-html = builtins.toFile "index.html" ''
-        <html>
-          <head>
-            <script language="javascript" src="all.min.js" async></script>
-          </head>
-          <body></body>
-        </html>
-      '';
-      buildCommand = ''
-        mkdir -p $out
-        cp ${index-html} $out/index.html
-        ${pkgs.closurecompiler}/bin/closure-compiler \
-          ${ormolu-live}/bin/ormolu-live.jsexe/all.js \
-          --compilation_level=ADVANCED_OPTIMIZATIONS \
-          --jscomp_off=checkVars \
-          --externs=${ormolu-live}/bin/ormolu-live.jsexe/all.js.externs \
-          > $out/all.min.js
-      '';
-    };
-
-    shell = haskellPackages.shellFor {
-      packages = ps: [
-        ps.ormolu-live
-      ];
-      buildInputs = [
-        (import (import ./nixpkgs.nix) { }).cabal-install
-      ];
-    };
-  }
+  haskellPackages.ormolu-live
 
   # ormolu = pkgs.haskell.lib.overrideCabal haskellPackages.ormolu
   #   (drv: { buildFlags =
