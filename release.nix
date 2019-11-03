@@ -17,11 +17,13 @@ in
     buildCommand = ''
       mkdir -p $out
       cp ${index-html} $out/index.html
+      echo "Optimizing with closure-compiler..."
       ${pkgs.closurecompiler}/bin/closure-compiler \
         ${ormolu-live}/bin/ormolu-live.jsexe/all.js \
         --compilation_level=ADVANCED_OPTIMIZATIONS \
         --jscomp_off=checkVars \
         --externs=${ormolu-live}/bin/ormolu-live.jsexe/all.js.externs \
+        -W QUIET \
         > $out/all.min.js
     '';
   }
