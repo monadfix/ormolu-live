@@ -23,6 +23,13 @@ let
       hpc = self.callHackage "hpc" "0.6.0.3" { };
       ghc-lib-parser = pkgs.haskell.lib.dontHaddock
         (super.callHackage "ghc-lib-parser" "8.8.1" { });
+      ghc-syntax-highlighter = pkgs.haskell.lib.dontCheck
+        (self.callCabal2nix "ghc-syntax-highlighter" (pkgs.fetchFromGitHub {
+           owner = "neongreen";
+           repo = "ghc-syntax-highlighter";
+           sha256 = "1d7d0diiqilw30d84cws8zqm36cc101qy2mxxbixbls5qd3kyk8a";
+           rev = "8c47d4c04a72464fabf8fa55c6e7de6b54c22e8a";
+        }) { });
       ormolu = pkgs.haskell.lib.dontCheck
         (self.callCabal2nix "ormolu" (pkgs.fetchFromGitHub {
            owner = "tweag";
