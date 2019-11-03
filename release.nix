@@ -1,5 +1,5 @@
 let
-  pkgs = (import ./reflex-platform.nix).nixpkgs;
+  pkgs = (import ./nix/reflex-platform.nix).nixpkgs;
 
   ormolu-live = import ./default.nix;
 

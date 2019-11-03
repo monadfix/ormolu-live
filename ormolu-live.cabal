@@ -10,6 +10,7 @@ cabal-version: >=1.10
 
 executable ormolu-live
   main-is: Main.hs
+  hs-source-dir: src
   build-depends:
     base,
     text,

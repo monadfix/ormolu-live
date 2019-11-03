@@ -1,14 +1,13 @@
 let
-  reflex-platform = import ./reflex-platform.nix;
+  reflex-platform = import ./nix/reflex-platform.nix;
 
   pkgs = reflex-platform.nixpkgs;
 
-  ormolu-src = pkgs.fetchgit {
-    url = "https://github.com/tweag/ormolu.git";
-    sha256 = "0ai6a3957gzlkhkmnpvh3ngrk58rgc0wic5rysf1h2yddxlx6fd7";
-    rev = "b08af17217e42e43042993b0ec4cbd3d00b158bb";
-    fetchSubmodules = true;
-  };
+  source = pkgs.lib.sourceByRegex ./. [
+    "^ormolu-live\.cabal$"
+    "^src.*$"
+    "^LICENSE$"
+  ];
 
   optimize = pkg: pkgs.haskell.lib.overrideCabal pkg (drv: {
     buildFlags =
@@ -25,9 +24,14 @@ let
       ghc-lib-parser = pkgs.haskell.lib.dontHaddock
         (super.callHackage "ghc-lib-parser" "8.8.1" { });
       ormolu = pkgs.haskell.lib.dontCheck
-        (self.callCabal2nix "ormolu" "${ormolu-src}" { });
+        (self.callCabal2nix "ormolu" (pkgs.fetchFromGitHub {
+           owner = "tweag";
+           repo = "ormolu";
+           sha256 = "0ai6a3957gzlkhkmnpvh3ngrk58rgc0wic5rysf1h2yddxlx6fd7";
+           rev = "b08af17217e42e43042993b0ec4cbd3d00b158bb";
+        }) { });
       ormolu-live = optimize (pkgs.haskell.lib.dontCheck
-        (self.callCabal2nix "ormolu-live" ./pkg { }));
+        (self.callCabal2nix "ormolu-live" source { }));
     };
   };
 
