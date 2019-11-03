@@ -1,7 +1,10 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE RankNTypes #-}
 {-# LANGUAGE LambdaCase #-}
+{-# LANGUAGE NamedFieldPuns #-}
 {-# LANGUAGE TypeApplications #-}
+
+{-# OPTIONS_GHC -Wno-simplifiable-class-constraints #-}
 
 module Main (main) where
 
@@ -20,20 +23,21 @@ import Data.Text as Text
 main :: IO ()
 main = mainWidgetInElementByIdMaybe "ormolu-live" $ do
   t <- textArea $ def
-  elAttr "pre" ("class" =: "source-code") $
-    elAttr "code" ("class" =: "language-haskell") $ do
-      out <-
-        fmap render <$>
-        foldDyn
-          update
-          (Good (pure ()))
-          (unpack <$> _textArea_input t)
-      void (dyn out)
-
-render :: MonadWidget t m => OutputState t m -> m ()
-render = \case
-  Good output -> output
-  Broken output err -> text (pack err <> "\n\n") >> output
+  elAttr "div" ("class" =: "ormolu-output") $ do
+    let render = \case
+          Good { currentOutput } ->
+            elAttr "pre" ("class" =: "ormolu-result") $
+              el "code" currentOutput
+          Broken { previousOutput, currentError } -> do
+            elAttr "pre" ("class" =: "ormolu-result") $
+              el "code" previousOutput
+            elAttr "pre" ("class" =: "ormolu-error") $
+              el "code" (text (pack currentError))
+    void . dyn . fmap render =<<
+      foldDyn
+        update
+        (Good (pure ()))
+        (unpack <$> _textArea_input t)
 
 -- | Run a reflex-dom application inside of an existing DOM element with the
 -- given ID. If the element does not exist, attach it to the document body.
@@ -68,10 +72,10 @@ update input state =
 ormolu :: String -> Either String Text
 ormolu "" = Right ""
 ormolu s =
-  either (Left . show) Right $
+  either (Left . displayException) Right $
   unsafePerformIO $
     try @SomeException $
-    Ormolu.ormolu Ormolu.defaultConfig "" s
+    Ormolu.ormolu Ormolu.defaultConfig "<input>" s
 
 ----------------------------------------------------------------------------
 -- Highlighting
