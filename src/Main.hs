@@ -1,7 +1,7 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE RankNTypes #-}
 {-# LANGUAGE LambdaCase #-}
-{-# LANGUAGE NamedFieldPuns #-}
+{-# LANGUAGE RecordWildCards #-}
 {-# LANGUAGE TypeApplications #-}
 
 {-# OPTIONS_GHC -Wno-simplifiable-class-constraints #-}
@@ -24,19 +24,18 @@ main :: IO ()
 main = mainWidgetInElementByIdMaybe "ormolu-live" $ do
   t <- textArea $ def
   elAttr "div" ("class" =: "ormolu-output") $ do
-    let render = \case
-          Good { currentOutput } ->
-            elAttr "pre" ("class" =: "source-code ormolu-result") $
-              el "code" currentOutput
-          Broken { previousOutput, currentError } -> do
-            elAttr "pre" ("class" =: "source-code ormolu-result") $
-              el "code" previousOutput
-            elAttr "pre" ("class" =: "ormolu-error") $
-              el "code" (text (pack currentError))
+    let render OutputState{..} = do
+          elAttr "pre" ("class" =: "source-code ormolu-result") $
+            el "code" formatted
+          case errorMsg of
+            Nothing -> pure ()
+            Just msg ->
+              elAttr "pre" ("class" =: "ormolu-error") $
+                el "code" (text (pack msg))
     void . dyn . fmap render =<<
       foldDyn
         update
-        (Good (pure ()))
+        (OutputState (pure ()) Nothing)
         (unpack <$> _textArea_input t)
 
 -- | Run a reflex-dom application inside of an existing DOM element with the
@@ -53,29 +52,58 @@ mainWidgetInElementByIdMaybe eid w =
 -- Processing
 ----------------------------------------------------------------------------
 
-data OutputState t m
-  = Good { currentOutput :: m () }
-  | Broken { previousOutput :: m ()
-           , currentError :: String }
+data OutputState m = OutputState
+  { formatted :: m ()
+  , errorMsg :: Maybe String
+  }
 
-update :: MonadWidget t m => String -> OutputState t m -> OutputState t m
-update input state =
-  case (state, ormolu input) of
-    (_, Right val) -> Good (ghcSyntaxHighlighter val)
-    (Good output, Left err) -> Broken output err
-    (Broken output _, Left err) -> Broken output err
+update :: MonadWidget t m => String -> OutputState m -> OutputState m
+update input prevState =
+  let OrmoluResult{..} = ormolu input
+   in OutputState
+        { formatted = maybe (formatted prevState) ghcSyntaxHighlighter ormoluOutput
+        , errorMsg = ormoluError
+        }
 
 ----------------------------------------------------------------------------
 -- Formatting
 ----------------------------------------------------------------------------
 
-ormolu :: String -> Either String Text
-ormolu "" = Right ""
+data OrmoluResult = OrmoluResult
+  { ormoluOutput :: Maybe Text
+  , ormoluError :: Maybe String
+  }
+
+ormolu :: String -> OrmoluResult
+ormolu "" = OrmoluResult
+    { ormoluOutput = Just ""
+    , ormoluError = Nothing
+    }
 ormolu s =
-  either (Left . displayException) Right $
-  unsafePerformIO $
-    try @SomeException $
-    Ormolu.ormolu Ormolu.defaultConfig "<input>" s
+    case ormoluWithConfig Ormolu.defaultConfig of
+      -- all OK
+      Right out -> OrmoluResult
+          { ormoluOutput = Just out
+          , ormoluError = Nothing
+          }
+      Left err ->
+        case ormoluWithConfig Ormolu.defaultConfig{Ormolu.cfgUnsafe = True} of
+          -- can format only with --unsafe
+          Right out -> OrmoluResult
+              { ormoluOutput = Just out
+              , ormoluError = Just err
+              }
+          -- can't format even with --unsafe
+          Left _ -> OrmoluResult
+              { ormoluOutput = Nothing
+              , ormoluError = Just err
+              }
+  where
+    ormoluWithConfig cfg =
+      either (Left . displayException) Right $
+      unsafePerformIO $
+        try @SomeException $
+        Ormolu.ormolu cfg "<input>" s
 
 ----------------------------------------------------------------------------
 -- Highlighting
