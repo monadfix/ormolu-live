@@ -26,10 +26,10 @@ main = mainWidgetInElementByIdMaybe "ormolu-live" $ do
   elAttr "div" ("class" =: "ormolu-output") $ do
     let render = \case
           Good { currentOutput } ->
-            elAttr "pre" ("class" =: "ormolu-result") $
+            elAttr "pre" ("class" =: "source-code ormolu-result") $
               el "code" currentOutput
           Broken { previousOutput, currentError } -> do
-            elAttr "pre" ("class" =: "ormolu-result") $
+            elAttr "pre" ("class" =: "source-code ormolu-result") $
               el "code" previousOutput
             elAttr "pre" ("class" =: "ormolu-error") $
               el "code" (text (pack currentError))
