@@ -1,7 +1,10 @@
+{ ormolu ? import ./nix/ormolu.nix
+}:
+
 let
   pkgs = (import ./nix/reflex-platform.nix).nixpkgs;
 
-  ormolu-live = import ./default.nix;
+  ormolu-live = import ./default.nix { inherit ormolu; };
 
 in
   pkgs.stdenv.mkDerivation rec {
