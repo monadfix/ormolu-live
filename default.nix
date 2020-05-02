@@ -25,7 +25,7 @@ let
     overrides = self: super: {
       hpc = self.callHackage "hpc" "0.6.0.3" { };
       ghc-lib-parser = pkgs.haskell.lib.dontHaddock
-        (super.callHackage "ghc-lib-parser" "8.8.1" { });
+        (super.callHackage "ghc-lib-parser" "8.10.1" { });
       ghc-syntax-highlighter = pkgs.haskell.lib.dontCheck
         (self.callCabal2nix "ghc-syntax-highlighter" (pkgs.fetchFromGitHub {
            owner = "neongreen";
