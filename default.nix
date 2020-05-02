@@ -25,14 +25,17 @@ let
     overrides = self: super: {
       hpc = self.callHackage "hpc" "0.6.0.3" { };
       ghc-lib-parser = pkgs.haskell.lib.dontHaddock
-        (super.callHackage "ghc-lib-parser" "8.10.1" { });
+        (self.callHackageDirect {
+           pkg = "ghc-lib-parser";
+           ver = "8.10.1.20200412";
+           sha256 = "05adhjbvkgpx0bwzv1klc2a356d23zqdbj502iapqksirjkk6cqj";
+         } {});
       ghc-syntax-highlighter = pkgs.haskell.lib.dontCheck
-        (self.callCabal2nix "ghc-syntax-highlighter" (pkgs.fetchFromGitHub {
-           owner = "neongreen";
-           repo = "ghc-syntax-highlighter";
-           sha256 = "1d7d0diiqilw30d84cws8zqm36cc101qy2mxxbixbls5qd3kyk8a";
-           rev = "8c47d4c04a72464fabf8fa55c6e7de6b54c22e8a";
-        }) { });
+        (self.callHackageDirect {
+           pkg = "ghc-syntax-highlighter";
+           ver = "0.0.6.0";
+           sha256 = "0891swy185smdycfzlmklki4q8l5xwqvav6zk3k1gdx968mg1hdr";
+         } {});
       ormolu = pkgs.haskell.lib.dontCheck
         (self.callCabal2nix "ormolu" ormolu { });
       ormolu-live = optimize (pkgs.haskell.lib.dontCheck

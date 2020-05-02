@@ -1,6 +1,6 @@
 (import <nixpkgs> { }).fetchFromGitHub {
   owner = "tweag";
   repo = "ormolu";
-  sha256 = "0ai6a3957gzlkhkmnpvh3ngrk58rgc0wic5rysf1h2yddxlx6fd7";
-  rev = "b08af17217e42e43042993b0ec4cbd3d00b158bb";
+  sha256 = "1pn5nydxsz4kip60cmlcf0k4w6nf1b699dsamp26w47cjfrfax0b";
+  rev = "fc64eada5c4da7a5b07d2872e253671b48aec115";
 }
