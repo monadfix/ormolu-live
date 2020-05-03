@@ -25,11 +25,7 @@ let
     overrides = self: super: {
       hpc = self.callHackage "hpc" "0.6.0.3" { };
       ghc-lib-parser = pkgs.haskell.lib.dontHaddock
-        (self.callHackageDirect {
-           pkg = "ghc-lib-parser";
-           ver = "8.10.1.20200412";
-           sha256 = "05adhjbvkgpx0bwzv1klc2a356d23zqdbj502iapqksirjkk6cqj";
-         } {});
+        (self.callCabal2nix "ghc-lib-parser" ./ghc-lib-parser-8.10.1.20200412 { });
       ghc-syntax-highlighter = pkgs.haskell.lib.dontCheck
         (self.callHackageDirect {
            pkg = "ghc-syntax-highlighter";
